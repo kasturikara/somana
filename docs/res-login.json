@@ -1,0 +1,17 @@
+{
+  "message": "Login berhasil",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1N2RhOGQ1ZC1jMDg0LTRmNmYtOTgwZC02Y2IxYmNmMjlhODkiLCJlbWFpbCI6ImFkbWluQGRpc2tvbWluZm8uZ28uaWQiLCJuYW1lIjoiQWRpdHlhIE51Z3JvaG8iLCJyb2xlIjoiYWRtaW5fZGlza29taW5mbyIsImRlcGFydG1lbnQiOiJEaW5hcyBLb211bmlrYXNpIGRhbiBJbmZvcm1hdGlrYSIsImRpdmlzaW9uIjpudWxsLCJzZWN0aW9uIjpudWxsLCJwb3NpdGlvbiI6bnVsbCwic2tpbGxzIjpbXSwiaWF0IjoxNzY0NDg0OTI3LCJleHAiOjE3NjQ1NzEzMjd9.6wK3NuwLpJwc4BJuQK8JXMOlv06GmjjADRMCEm31FR8",
+  "user": {
+    "user_id": "57da8d5d-c084-4f6f-980d-6cb1bcf29a89",
+    "email": "admin@diskominfo.go.id",
+    "name": "Aditya Nugroho",
+    "role": "admin_diskominfo",
+    "nip": "19910420 201035 1 035",
+    "phone_number": "081233221678",
+    "department": "Dinas Komunikasi dan Informatika",
+    "division": null,
+    "section": null,
+    "position": null,
+    "skills": []
+  }
+}
