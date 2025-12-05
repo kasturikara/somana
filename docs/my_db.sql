@@ -81,6 +81,7 @@ CREATE TABLE public.change_request (
   implementation_plan character varying,
   pic_after uuid,
   metadata jsonb,
+  risk_level character varying,
   CONSTRAINT change_request_pkey PRIMARY KEY (cr_id),
   CONSTRAINT change_request_requester_id_fkey FOREIGN KEY (requester_id) REFERENCES public.user_clone(user_id),
   CONSTRAINT change_request_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.department_clone(department_id),
@@ -93,7 +94,7 @@ CREATE TABLE public.change_request_ci (
   ci_before_id uuid,
   impact_score integer,
   risk_level character varying,
-  final_risk_score integer,
+  final_risk_score real,
   exposure_score integer,
   prob_score integer,
   status character varying,
@@ -102,15 +103,18 @@ CREATE TABLE public.change_request_ci (
   asset_before_id uuid,
   asset_after_id uuid,
   asset_before_data jsonb,
-  hr_id uuid,
+  hr_before_id uuid,
+  hr_after_id uuid,
+  hr_before_data jsonb,
   CONSTRAINT change_request_ci_pkey PRIMARY KEY (cr_ci_id),
   CONSTRAINT change_request_ci_cr_id_fkey FOREIGN KEY (cr_id) REFERENCES public.change_request(cr_id),
   CONSTRAINT change_request_ci_ci_after_id_fkey FOREIGN KEY (ci_after_id) REFERENCES public.configuration_item(ci_id),
   CONSTRAINT change_request_ci_ci_before_id_fkey FOREIGN KEY (ci_before_id) REFERENCES public.configuration_item(ci_id),
   CONSTRAINT change_request_ci_asset_before_id_fkey FOREIGN KEY (asset_before_id) REFERENCES public.asset_non_ti(asset_id),
   CONSTRAINT change_request_ci_asset_after_id_fkey FOREIGN KEY (asset_after_id) REFERENCES public.asset_non_ti(asset_id),
-  CONSTRAINT change_request_ci_hr_before_id_fkey FOREIGN KEY (hr_id) REFERENCES public.human_resources_clone(hr_id),
-  CONSTRAINT change_request_ci_hr_id_fkey FOREIGN KEY (hr_id) REFERENCES public.human_resources_clone(hr_id)
+  CONSTRAINT change_request_ci_hr_before_id_fkey FOREIGN KEY (hr_before_id) REFERENCES public.human_resources_clone(hr_id),
+  CONSTRAINT change_request_ci_hr_id_fkey FOREIGN KEY (hr_before_id) REFERENCES public.human_resources_clone(hr_id),
+  CONSTRAINT change_request_ci_hr_after_id_fkey FOREIGN KEY (hr_after_id) REFERENCES public.human_resources_clone(hr_id)
 );
 CREATE TABLE public.change_request_result (
   cr_result_id uuid NOT NULL DEFAULT gen_random_uuid(),

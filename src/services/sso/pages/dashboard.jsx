@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getUser } from "../../../utils/auth";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -14,10 +14,22 @@ const DashboardPages = () => {
 
   return (
     <div className="min-h-screen bg-base-200">
+      {" "}
       {/* Navbar */}
       <div className="navbar bg-base-100 shadow-lg">
         <div className="flex-1">
           <a className="btn btn-ghost text-xl">SOMANA Dashboard</a>
+        </div>
+        <div className="flex gap-2">
+          <Link to="/sso-clone" className="btn btn-ghost btn-sm">
+            📊 SSO Clone
+          </Link>
+          <Link to="/sso-services" className="btn btn-ghost btn-sm">
+            🔐 SSO Services
+          </Link>
+          <Link to="/sync-sso" className="btn btn-ghost btn-sm">
+            🔄 Sync
+          </Link>
         </div>
         <div className="flex-none gap-2">
           {user && (
@@ -57,7 +69,6 @@ const DashboardPages = () => {
           )}
         </div>
       </div>
-
       {/* Main Content */}
       <div className="container mx-auto p-6">
         {/* Stats Cards */}
@@ -125,7 +136,6 @@ const DashboardPages = () => {
             <div className="stat-desc">↘︎ 90 (14%)</div>
           </div>
         </div>
-
         {/* User Info Card */}
         {user && (
           <div className="card bg-base-100 shadow-xl mb-6">
@@ -182,36 +192,92 @@ const DashboardPages = () => {
               </div>
             </div>
           </div>
-        )}
-
+        )}{" "}
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="card bg-primary text-primary-content shadow-xl hover:shadow-2xl transition-shadow cursor-pointer">
+          <div
+            className="card bg-success text-success-content shadow-xl hover:shadow-2xl transition-shadow cursor-pointer"
+            onClick={() => navigate("/sso-clone")}
+          >
             <div className="card-body">
-              <h2 className="card-title">Configuration Items</h2>
-              <p>Manage your IT assets and configurations</p>
+              <h2 className="card-title">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"
+                  />
+                </svg>
+                SSO Clone
+              </h2>
+              <p>View local database clone from SIKONFI</p>
               <div className="card-actions justify-end">
-                <button className="btn btn-sm">View</button>
+                <button className="btn btn-sm">View Data</button>
               </div>
             </div>
           </div>
 
-          <div className="card bg-secondary text-secondary-content shadow-xl hover:shadow-2xl transition-shadow cursor-pointer">
+          <div
+            className="card bg-primary text-primary-content shadow-xl hover:shadow-2xl transition-shadow cursor-pointer"
+            onClick={() => navigate("/sso-services")}
+          >
             <div className="card-body">
-              <h2 className="card-title">Change Requests</h2>
-              <p>Submit and track change requests</p>
+              <h2 className="card-title">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+                  />
+                </svg>
+                SSO Services
+              </h2>
+              <p>Access SSO Database directly (read-only)</p>
               <div className="card-actions justify-end">
-                <button className="btn btn-sm">View</button>
+                <button className="btn btn-sm">View Services</button>
               </div>
             </div>
           </div>
 
-          <div className="card bg-accent text-accent-content shadow-xl hover:shadow-2xl transition-shadow cursor-pointer">
+          <div
+            className="card bg-info text-info-content shadow-xl hover:shadow-2xl transition-shadow cursor-pointer"
+            onClick={() => navigate("/sync-sso")}
+          >
             <div className="card-body">
-              <h2 className="card-title">Patch Management</h2>
-              <p>Monitor patch jobs and updates</p>
+              <h2 className="card-title">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-6 h-6"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                  />
+                </svg>
+                Sync SSO
+              </h2>
+              <p>Synchronize SSO data to main database</p>
               <div className="card-actions justify-end">
-                <button className="btn btn-sm">View</button>
+                <button className="btn btn-sm">Sync Now</button>
               </div>
             </div>
           </div>
