@@ -102,7 +102,20 @@ const SyncPages = () => {
       icon: "🎓",
       apiPath: "hr-skill",
       clonePath: "hr-skills",
-      columns: ["hr_id", "skill_id", "certificate_file"],
+      columns: [
+        "hr_id",
+        "hr_name",
+        "skill_id",
+        "skill_name",
+        "certificate_file",
+      ],
+      displayColumns: {
+        hr_id: "HR ID",
+        hr_name: "Employee Name",
+        skill_id: "Skill ID",
+        skill_name: "Skill Name",
+        certificate_file: "Certificate",
+      },
     },
     {
       id: "user",

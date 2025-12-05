@@ -86,7 +86,20 @@ const SSOClonePage = () => {
       name: "HR Skills",
       icon: "🎓",
       endpoint: "hr-skills",
-      columns: ["hr_id", "skill_id", "certificate_file"],
+      columns: [
+        "hr_id",
+        "hr_name",
+        "skill_id",
+        "skill_name",
+        "certificate_file",
+      ],
+      displayColumns: {
+        hr_id: "HR ID",
+        hr_name: "Employee Name",
+        skill_id: "Skill ID",
+        skill_name: "Skill Name",
+        certificate_file: "Certificate",
+      },
     },
     {
       id: "users",
@@ -178,15 +191,16 @@ const SSOClonePage = () => {
     fetchData(activeTab);
     fetchStats();
   };
-
   const renderTableHeader = (columns) => {
+    const currentTableConfig = tables.find((t) => t.id === activeTab);
+    const displayColumns = currentTableConfig?.displayColumns || {};
     return (
       <thead>
         <tr className="bg-base-200">
           <th className="w-16">#</th>
           {columns.map((col) => (
             <th key={col} className="capitalize">
-              {col.replace(/_/g, " ")}
+              {displayColumns[col] || col.replace(/_/g, " ")}
             </th>
           ))}
         </tr>
@@ -235,21 +249,36 @@ const SSOClonePage = () => {
         </tbody>
       );
     }
-
     return (
       <tbody>
-        {data.map((row, index) => (
-          <tr key={index} className="hover">
-            <td>{index + 1}</td>
-            {columns.map((col) => (
-              <td key={col}>
-                {row[col] !== null && row[col] !== undefined
-                  ? String(row[col])
-                  : "-"}
-              </td>
-            ))}
-          </tr>
-        ))}
+        {data.map((row, index) => {
+          const currentTableConfig = tables.find((t) => t.id === activeTab);
+          return (
+            <tr key={index} className="hover">
+              <td>{index + 1}</td>
+              {columns.map((col) => {
+                let value = row[col];
+
+                // Handle relational data for HR Skills table
+                if (currentTableConfig?.id === "hr_skills") {
+                  if (col === "hr_name" && row.hr) {
+                    value = row.hr.name;
+                  } else if (col === "skill_name" && row.skill) {
+                    value = row.skill.skill_name;
+                  }
+                }
+
+                return (
+                  <td key={col}>
+                    {value !== null && value !== undefined
+                      ? String(value)
+                      : "-"}
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        })}
       </tbody>
     );
   };
