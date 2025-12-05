@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { getUser } from "../../../utils/auth";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -6,11 +7,77 @@ const DashboardPages = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const user = getUser();
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalRecords: 0,
+    lastSync: "Never",
+  });
+  const [loading, setLoading] = useState(true);
 
   const handleLogout = () => {
     logout();
     navigate("/login", { replace: true });
   };
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const API_URL = import.meta.env.VITE_API_URL;
+
+      // Fetch users count from SSO Clone
+      const usersResponse = await fetch(`${API_URL}/sso-clone/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      let totalUsers = 0;
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        totalUsers = usersData.data?.length || 0;
+      }
+
+      // Fetch all tables to calculate total records
+      const tables = [
+        "departments",
+        "divisions",
+        "sections",
+        "positions",
+        "roles",
+        "skills",
+        "human-resources",
+        "hr-skills",
+      ];
+
+      let totalRecords = totalUsers;
+
+      for (const table of tables) {
+        const response = await fetch(`${API_URL}/sso-clone/${table}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          totalRecords += data.data?.length || 0;
+        }
+      }
+
+      setStats({
+        totalUsers,
+        totalRecords,
+        lastSync: "Never", // TODO: Get from sync history API if available
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return (
     <div className="min-h-screen bg-base-200">
@@ -71,7 +138,8 @@ const DashboardPages = () => {
       </div>
       {/* Main Content */}
       <div className="container mx-auto p-6">
-        {/* Stats Cards */}
+        {" "}
+        {/* Stats Cards  */}
         <div className="stats stats-vertical lg:stats-horizontal shadow w-full mb-6">
           <div className="stat">
             <div className="stat-figure text-primary">
@@ -85,13 +153,19 @@ const DashboardPages = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                 ></path>
               </svg>
             </div>
-            <div className="stat-title">Total Users</div>
-            <div className="stat-value text-primary">25.6K</div>
-            <div className="stat-desc">21% more than last month</div>
+            <div className="stat-title">Total SSO Users</div>
+            <div className="stat-value text-primary">
+              {loading ? (
+                <span className="loading loading-spinner loading-lg"></span>
+              ) : (
+                stats.totalUsers.toLocaleString()
+              )}
+            </div>
+            <div className="stat-desc">Users in SIKONFI database</div>
           </div>
 
           <div className="stat">
@@ -106,13 +180,19 @@ const DashboardPages = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                  d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
                 ></path>
               </svg>
             </div>
-            <div className="stat-title">Active Sessions</div>
-            <div className="stat-value text-secondary">2.6K</div>
-            <div className="stat-desc">↗︎ 400 (22%)</div>
+            <div className="stat-title">Cloned Records</div>
+            <div className="stat-value text-secondary">
+              {loading ? (
+                <span className="loading loading-spinner loading-lg"></span>
+              ) : (
+                stats.totalRecords.toLocaleString()
+              )}
+            </div>
+            <div className="stat-desc">Local database records</div>
           </div>
 
           <div className="stat">
@@ -127,13 +207,19 @@ const DashboardPages = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 ></path>
               </svg>
             </div>
-            <div className="stat-title">Tasks</div>
-            <div className="stat-value text-accent">1.2K</div>
-            <div className="stat-desc">↘︎ 90 (14%)</div>
+            <div className="stat-title">Last Sync</div>
+            <div className="stat-value text-accent text-2xl">
+              {loading ? (
+                <span className="loading loading-spinner loading-lg"></span>
+              ) : (
+                stats.lastSync
+              )}
+            </div>
+            <div className="stat-desc">Click Sync to update data</div>
           </div>
         </div>
         {/* User Info Card */}
@@ -192,7 +278,7 @@ const DashboardPages = () => {
               </div>
             </div>
           </div>
-        )}{" "}
+        )}
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div
