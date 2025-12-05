@@ -16,8 +16,12 @@ const SyncPages = () => {
   const [previewData, setPreviewData] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
   const [syncResults, setSyncResults] = useState({});
-
   const apiUrl = import.meta.env.VITE_API_URL;
+
+  // Helper function to get preview data (handles nested structure from backend)
+  const getPreviewData = () => {
+    return previewData?.data?.data || previewData?.data || {};
+  };
 
   const handleLogout = () => {
     logout();
@@ -129,7 +133,6 @@ const SyncPages = () => {
     try {
       const table = tables.find((t) => t.id === tableName);
       const apiPath = table?.apiPath || tableName;
-
       const response = await axios.get(
         `${apiUrl}/sync/sso/${apiPath}/preview`,
         {
@@ -137,14 +140,18 @@ const SyncPages = () => {
         }
       );
 
+      console.log("Preview response:", response.data); // Debug log
       setPreviewData(response.data);
 
       // Initialize selected items (semua selected by default)
       const initialSelected = {};
-      if (response.data?.data) {
+      // Backend mengembalikan nested data: response.data.data.data
+      const previewDataItems = response.data?.data?.data || response.data?.data;
+
+      if (previewDataItems) {
         ["toInsert", "toUpdate", "toDelete"].forEach((action) => {
-          if (response.data.data[action]) {
-            response.data.data[action].forEach((item, index) => {
+          if (previewDataItems[action]) {
+            previewDataItems[action].forEach((item, index) => {
               initialSelected[`${action}_${index}`] = true;
             });
           }
@@ -161,10 +168,10 @@ const SyncPages = () => {
       setLoading(false);
     }
   };
-
   const handleSelectAll = (action) => {
     const newSelected = { ...selectedItems };
-    const items = previewData?.data?.[action] || [];
+    const data = getPreviewData();
+    const items = data[action] || [];
     const allSelected = items.every(
       (_, index) => selectedItems[`${action}_${index}`]
     );
@@ -182,9 +189,9 @@ const SyncPages = () => {
       [`${action}_${index}`]: !prev[`${action}_${index}`],
     }));
   };
-
   const handleExecuteSync = async () => {
-    if (!previewData?.data) return;
+    const data = getPreviewData();
+    if (!data) return;
 
     setSyncing(true);
 
@@ -193,21 +200,41 @@ const SyncPages = () => {
       const apiPath = table?.apiPath || activeTab;
 
       // Filter hanya item yang dicentang
+      // Backend expects: selectedInsert, selectedUpdate, selectedDelete
       const selectedData = {
-        toInsert: [],
-        toUpdate: [],
-        toDelete: [],
+        selectedInsert: [],
+        selectedUpdate: [],
+        selectedDelete: [],
       };
 
-      ["toInsert", "toUpdate", "toDelete"].forEach((action) => {
-        if (previewData.data[action]) {
-          previewData.data[action].forEach((item, index) => {
-            if (selectedItems[`${action}_${index}`]) {
-              selectedData[action].push(item);
-            }
-          });
-        }
-      });
+      // Map toInsert -> selectedInsert
+      if (data.toInsert) {
+        data.toInsert.forEach((item, index) => {
+          if (selectedItems[`toInsert_${index}`]) {
+            selectedData.selectedInsert.push(item);
+          }
+        });
+      }
+
+      // Map toUpdate -> selectedUpdate
+      if (data.toUpdate) {
+        data.toUpdate.forEach((item, index) => {
+          if (selectedItems[`toUpdate_${index}`]) {
+            selectedData.selectedUpdate.push(item);
+          }
+        });
+      }
+
+      // Map toDelete -> selectedDelete
+      if (data.toDelete) {
+        data.toDelete.forEach((item, index) => {
+          if (selectedItems[`toDelete_${index}`]) {
+            selectedData.selectedDelete.push(item);
+          }
+        });
+      }
+
+      console.log("Sending sync data:", selectedData); // Debug log
 
       const response = await axios.post(
         `${apiUrl}/sync/sso/${apiPath}/execute`,
@@ -249,10 +276,10 @@ const SyncPages = () => {
       setSyncing(false);
     }
   };
-
   const getSelectedCount = (action) => {
-    if (!previewData?.data?.[action]) return 0;
-    return previewData.data[action].filter(
+    const data = getPreviewData();
+    if (!data[action]) return 0;
+    return data[action].filter(
       (_, index) => selectedItems[`${action}_${index}`]
     ).length;
   };
@@ -350,10 +377,10 @@ const SyncPages = () => {
                     {user.name?.charAt(0).toUpperCase()}
                   </span>
                 </div>
-              </div>
+              </div>{" "}
               <ul
                 tabIndex={0}
-                className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
+                className="mt-3 z-1 p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
               >
                 <li className="menu-title">
                   <span>{user.name}</span>
@@ -617,11 +644,11 @@ const SyncPages = () => {
                               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                             ></path>
                           </svg>
-                        </div>
+                        </div>{" "}
                         <div className="stat-title">To Insert</div>
                         <div className="stat-value text-success">
                           {getSelectedCount("toInsert")} /{" "}
-                          {previewData.data?.toInsert?.length || 0}
+                          {getPreviewData().toInsert?.length || 0}
                         </div>
                         <div className="stat-desc">New records from SSO</div>
                       </div>
@@ -645,7 +672,7 @@ const SyncPages = () => {
                         <div className="stat-title">To Update</div>
                         <div className="stat-value text-warning">
                           {getSelectedCount("toUpdate")} /{" "}
-                          {previewData.data?.toUpdate?.length || 0}
+                          {getPreviewData().toUpdate?.length || 0}
                         </div>
                         <div className="stat-desc">Modified in SSO</div>
                       </div>
@@ -669,23 +696,22 @@ const SyncPages = () => {
                         <div className="stat-title">To Delete</div>
                         <div className="stat-value text-error">
                           {getSelectedCount("toDelete")} /{" "}
-                          {previewData.data?.toDelete?.length || 0}
+                          {getPreviewData().toDelete?.length || 0}
                         </div>
                         <div className="stat-desc">Not in SSO</div>
                       </div>
-                    </div>
-
+                    </div>{" "}
                     {/* Data Tables */}
                     <div className="space-y-6 max-h-96 overflow-y-auto">
                       {/* To Insert */}
-                      {previewData.data?.toInsert &&
-                        previewData.data.toInsert.length > 0 && (
+                      {getPreviewData().toInsert &&
+                        getPreviewData().toInsert.length > 0 && (
                           <div className="card bg-success/10 border border-success/20">
                             <div className="card-body p-4">
                               <div className="flex justify-between items-center mb-4">
                                 <h3 className="card-title text-success text-sm">
                                   ➕ Records to Insert (
-                                  {previewData.data.toInsert.length})
+                                  {getPreviewData().toInsert.length})
                                 </h3>
                                 <label className="label cursor-pointer gap-2">
                                   <span className="label-text text-xs">
@@ -694,7 +720,7 @@ const SyncPages = () => {
                                   <input
                                     type="checkbox"
                                     className="checkbox checkbox-success checkbox-sm"
-                                    checked={previewData.data.toInsert.every(
+                                    checked={getPreviewData().toInsert.every(
                                       (_, i) => selectedItems[`toInsert_${i}`]
                                     )}
                                     onChange={() => handleSelectAll("toInsert")}
@@ -719,7 +745,7 @@ const SyncPages = () => {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {previewData.data.toInsert.map(
+                                    {getPreviewData().toInsert.map(
                                       (item, index) =>
                                         renderDataComparison(
                                           "toInsert",
@@ -732,17 +758,16 @@ const SyncPages = () => {
                               </div>
                             </div>
                           </div>
-                        )}
-
+                        )}{" "}
                       {/* To Update */}
-                      {previewData.data?.toUpdate &&
-                        previewData.data.toUpdate.length > 0 && (
+                      {getPreviewData().toUpdate &&
+                        getPreviewData().toUpdate.length > 0 && (
                           <div className="card bg-warning/10 border border-warning/20">
                             <div className="card-body p-4">
                               <div className="flex justify-between items-center mb-4">
                                 <h3 className="card-title text-warning text-sm">
                                   🔄 Records to Update (
-                                  {previewData.data.toUpdate.length})
+                                  {getPreviewData().toUpdate.length})
                                 </h3>
                                 <label className="label cursor-pointer gap-2">
                                   <span className="label-text text-xs">
@@ -751,7 +776,7 @@ const SyncPages = () => {
                                   <input
                                     type="checkbox"
                                     className="checkbox checkbox-warning checkbox-sm"
-                                    checked={previewData.data.toUpdate.every(
+                                    checked={getPreviewData().toUpdate.every(
                                       (_, i) => selectedItems[`toUpdate_${i}`]
                                     )}
                                     onChange={() => handleSelectAll("toUpdate")}
@@ -776,7 +801,7 @@ const SyncPages = () => {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {previewData.data.toUpdate.map(
+                                    {getPreviewData().toUpdate.map(
                                       (item, index) =>
                                         renderDataComparison(
                                           "toUpdate",
@@ -796,17 +821,16 @@ const SyncPages = () => {
                               </div>
                             </div>
                           </div>
-                        )}
-
+                        )}{" "}
                       {/* To Delete */}
-                      {previewData.data?.toDelete &&
-                        previewData.data.toDelete.length > 0 && (
+                      {getPreviewData().toDelete &&
+                        getPreviewData().toDelete.length > 0 && (
                           <div className="card bg-error/10 border border-error/20">
                             <div className="card-body p-4">
                               <div className="flex justify-between items-center mb-4">
                                 <h3 className="card-title text-error text-sm">
                                   🗑️ Records to Delete (
-                                  {previewData.data.toDelete.length})
+                                  {getPreviewData().toDelete.length})
                                 </h3>
                                 <label className="label cursor-pointer gap-2">
                                   <span className="label-text text-xs">
@@ -815,7 +839,7 @@ const SyncPages = () => {
                                   <input
                                     type="checkbox"
                                     className="checkbox checkbox-error checkbox-sm"
-                                    checked={previewData.data.toDelete.every(
+                                    checked={getPreviewData().toDelete.every(
                                       (_, i) => selectedItems[`toDelete_${i}`]
                                     )}
                                     onChange={() => handleSelectAll("toDelete")}
@@ -840,7 +864,7 @@ const SyncPages = () => {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {previewData.data.toDelete.map(
+                                    {getPreviewData().toDelete.map(
                                       (item, index) =>
                                         renderDataComparison(
                                           "toDelete",
@@ -854,14 +878,13 @@ const SyncPages = () => {
                             </div>
                           </div>
                         )}
-
                       {/* No Changes */}
-                      {(!previewData.data?.toInsert ||
-                        previewData.data.toInsert.length === 0) &&
-                        (!previewData.data?.toUpdate ||
-                          previewData.data.toUpdate.length === 0) &&
-                        (!previewData.data?.toDelete ||
-                          previewData.data.toDelete.length === 0) && (
+                      {(!getPreviewData().toInsert ||
+                        getPreviewData().toInsert.length === 0) &&
+                        (!getPreviewData().toUpdate ||
+                          getPreviewData().toUpdate.length === 0) &&
+                        (!getPreviewData().toDelete ||
+                          getPreviewData().toDelete.length === 0) && (
                           <div className="alert">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -883,7 +906,6 @@ const SyncPages = () => {
                           </div>
                         )}
                     </div>
-
                     {/* Modal Actions */}
                     <div className="modal-action">
                       <button
